@@ -69,13 +69,15 @@ Initialization: Constants are defined, including keyword groups and the year ran
 
 Execution: The program sends requests to the CrossRef API using boolean logic (AND/OR) for precision.
 
-the python script was use and modified from 
-Trujillo, F., Pozo, M., & Suntaxi, G. (2025). Artificial intelligence in education: A systematic literature
-review of machine learning approaches in student career prediction. Journal of Technology and Science
-Education, 15(1), 162-185. https://doi.org/10.3926/jotse.3124
-
 
 Processing: It iterates through JSON responses to extract metadata like title, authors, and abstracts.
 
 
 Saving: The data is stored in a pandas DataFrame and exported to stem_ai_blockchain_results.xlsx.
+
+the python script was reuse and modified from 
+Trujillo, F., Pozo, M., & Suntaxi, G. (2025). Artificial intelligence in education: A systematic literature
+review of machine learning approaches in student career prediction. Journal of Technology and Science
+Education, 15(1), 162-185. https://doi.org/10.3926/jotse.3124
+
+
