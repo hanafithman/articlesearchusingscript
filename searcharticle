@@ -1,0 +1,89 @@
+import requests
+import pandas as pd
+import time
+
+# --- Initialization ---
+# Constants defined for specific search terms and limits [cite: 20]
+MAX_RESULTS_PER_CATEGORY = 30 
+ROWS_PER_PAGE = 20 
+OUTPUT_FILE = "stem_ai_blockchain_results.xlsx"
+
+# Defined keyword groups based on your requirements
+SEARCH_CATEGORIES = {
+    "STEM_Curriculum": '("STEM curriculum framework" OR "adaptive STEM curriculum" OR "curriculum design") AND ("competency-based education" OR OBE)',
+    "AI_Teaching": '("AI-assisted teaching" OR "AIEd" OR "intelligent tutoring system") AND ("adaptive learning" OR "personalized learning")',
+    "Human_AI_Interaction": '("human-AI interaction" OR "human-in-the-loop") AND ("teacher-student interaction" OR "co-teaching")',
+    "Blockchain_Verification": '("blockchain in education" OR "micro-credential" OR "verifiable credential") AND "learning record"'
+}
+
+def fetch_crossref_data(categories, max_results, rows_per_page):
+    base_url = "https://api.crossref.org/works"
+    all_publications = []
+
+    for category_name, query in categories.items():
+        print(f"Searching category: {category_name}...")
+        offset = 0
+        category_count = 0
+
+        # Execution of the search with pagination [cite: 21, 23]
+        while category_count < max_results:
+            params = {
+                'query': query,
+                'rows': rows_per_page,
+                'offset': offset,
+                'select': 'title,author,URL,abstract,published-print,created' # Selecting specific metadata [cite: 7, 25]
+            }
+            
+            try:
+                # API request handling [cite: 22, 36]
+                response = requests.get(base_url, params=params)
+                if response.status_code != 200:
+                    break
+                
+                data = response.json()
+                items = data.get('message', {}).get('items', [])
+                if not items:
+                    break
+
+                # Processing of Results [cite: 24, 25]
+                for item in items:
+                    if category_count >= max_results:
+                        break
+                    
+                    title = item.get('title', ['No Title'])[0]
+                    authors_list = item.get('author', [])
+                    authors = ", ".join([f"{a.get('given', '')} {a.get('family', '')}" for a in authors_list])
+                    
+                    # Extract year from print or creation date [cite: 25]
+                    year_data = item.get('published-print', item.get('created', {}))
+                    year = year_data.get('date-parts', [[None]])[0][0]
+                    
+                    all_publications.append({
+                        'Category': category_name,
+                        'Title': title,
+                        'Authors': authors,
+                        'Link': item.get('URL', 'N/A'),
+                        'Abstract': item.get('abstract', 'No abstract available'),
+                        'Publication Year': year
+                    })
+                    category_count += 1
+
+                offset += rows_per_page
+                time.sleep(0.5) # Polite API delay
+
+            except Exception as e:
+                print(f"Error in {category_name}: {e}")
+                break
+
+    return all_publications
+
+# Execute and Save [cite: 33, 34]
+results = fetch_crossref_data(SEARCH_CATEGORIES, MAX_RESULTS_PER_CATEGORY, ROWS_PER_PAGE)
+
+if results:
+    df = pd.DataFrame(results)
+    # Export to Excel for easy manipulation 
+    df.to_excel(OUTPUT_FILE, index=False)
+    print(f"Search complete. Total articles saved: {len(df)}")
+else:
+    print("No results found.")
